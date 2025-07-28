@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monthly Expense Calculator</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    input { margin: 5px; }
+    table { border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    #calculate-btn:active {
+      background-color: #1976d2;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align: center; margin-bottom: 32px;">Monthly Expense Calculator</h2>
+
+  <div style="max-width: 600px; margin: 0 auto;">
+    <form id="expense-form">
+      <input type="text" id="category" placeholder="Category" required />
+      <input type="number" id="amount" placeholder="Amount" required step="any" min="0.01" />
+      <button type="submit">Add Expense</button>
+      <div id="amount-warning" style="color: red; display: none; font-size: 0.95em; margin-top: 4px;">Please, provide the amount greater than 0</div>
+    </form>
+
+    <table id="expenses-table">
+      <thead>
+        <tr><th>Category</th><th>Amount</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="calculate-btn" style="margin-top: 16px;">Calculate</button>
+  </div>
+
+  <div id="results" style="margin: 40px auto 0 auto; max-width: 600px;">
+    <h3>Results:</h3>
+    <p>Total: <span id="total"></span></p>
+    <p>Average Daily: <span id="average"></span></p>
+    <p>Top 3 Expenses:</p>
+    <ul id="top3"></ul>
+  </div>
+
+<script>
+  const expenses = [];
+
+  document.getElementById('expense-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const category = document.getElementById('category').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const warning = document.getElementById('amount-warning');
+    if (amount === 0) {
+      warning.style.display = 'block';
+      return;
+    } else {
+      warning.style.display = 'none';
+    }
+    if (category && amount) {
+      expenses.push({ category, amount });
+      const row = `<tr><td>${category}</td><td>$${amount.toFixed(2)}</td></tr>`;
+      document.querySelector('#expenses-table tbody').insertAdjacentHTML('beforeend', row);
+      document.getElementById('category').value = '';
+      document.getElementById('amount').value = '';
+    }
+  });
+
+  document.getElementById('calculate-btn').addEventListener('click', function() {
+    fetch('/expenses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expenses })
+    })
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('total').textContent = `$${data.total.toFixed(2)}`;
+      document.getElementById('average').textContent = `$${data.averageDaily.toFixed(2)}`;
+      const topList = document.getElementById('top3');
+      topList.innerHTML = '';
+      data.top3.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.category}: $${item.amount.toFixed(2)}`;
+        topList.appendChild(li);
+      });
+    })
+    .catch(err => alert("Error calculating expenses."));
+  });
+</script>
+
+</body>
+</html>
