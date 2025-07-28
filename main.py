@@ -14,6 +14,7 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+
 # Serve the HTML file at the root URL
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -26,19 +27,23 @@ def home():
 def home():
     with open("static/index.html") as f:
         return f.read()
+
 
 # Expense models
 class Expense(BaseModel):
     category: str
     amount: float
 
+
 class ExpensesRequest(BaseModel):
     expenses: List[Expense]
+
 
 class ExpensesResponse(BaseModel):
     total: float
     averageDaily: float
     top3: List[Expense]
+
 
 # API endpoint for calculations
 @app.post("/expenses", response_model=ExpensesResponse)
@@ -51,8 +56,4 @@ def calculate_expenses(data: ExpensesRequest):
     average_daily = round(total / 30, 2)
     top3 = sorted(expenses, key=lambda e: e.amount, reverse=True)[:3]
 
-    return ExpensesResponse(
-        total=total,
-        averageDaily=average_daily,
-        top3=top3
-    )
+    return ExpensesResponse(total=total, averageDaily=average_daily, top3=top3)
